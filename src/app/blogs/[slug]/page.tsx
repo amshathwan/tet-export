@@ -1,11 +1,7 @@
-/* eslint-disable */
 import { BlogDetails } from "@/component/blogDetails";
 import { notFound } from "next/navigation";
 
-type BlogProps = {
-  params: { slug?: string }; // Ensure params.slug is optional to avoid undefined issues
-};
-
+// Sample blog data
 const blogs = [
   {
     slug: "first-post",
@@ -19,16 +15,23 @@ const blogs = [
   },
 ];
 
-export default function BlogPost({ params }: any) {
-  if (!params?.slug) return notFound(); // Ensure slug is defined
-
-  const blog = blogs.find((b) => b.slug === params.slug);
-  if (!blog) return notFound();
-
-  return <BlogDetails title={blog?.title} content={blog?.content} />;
+// Generate static params at build time for each dynamic page
+export async function generateStaticParams() {
+  return blogs.map((blog) => ({
+    slug: blog.slug,
+  }));
 }
 
-// Generate static pages at build time
-export async function generateStaticParams() {
-  return blogs.map((blog) => ({ slug: blog.slug })); // Ensure correct slug structure
+// Fetch the data for each blog post
+export default async function BlogPost({ params }) {
+  // Await params
+  const { slug } = await params;
+
+  const blog = blogs.find((b) => b.slug === slug);
+
+  if (!blog) {
+    return notFound(); // Show 404 page if blog is not found
+  }
+
+  return <BlogDetails title={blog.title} content={blog.content} />;
 }
